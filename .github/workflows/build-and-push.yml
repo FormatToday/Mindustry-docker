@@ -23,11 +23,6 @@ jobs:
     # 允许构建失败重试 1 次
     strategy:
       fail-fast: false
-      matrix:
-        platform:
-          - linux/amd64
-          - linux/arm64
-
     steps:
       - name: 检出代码
         uses: actions/checkout@v5
@@ -56,7 +51,8 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          platforms: ${{ matrix.platform }}
+          # 同时构建 AMD64 和 ARM64
+          platforms: linux/amd64,linux/arm64
           push: true
           # 镜像标签：latest + 具体版本号（如 v146）
           tags: |
@@ -75,6 +71,7 @@ jobs:
       - name: 清理构建缓存
         if: always()
         run: docker builder prune -f
+
   # 清除旧的workflow运行记录
   cleanup-workflow-runs:
     runs-on: ubuntu-latest
