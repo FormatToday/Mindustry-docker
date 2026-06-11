@@ -10,7 +10,7 @@ WORKDIR /download
 # 从 GitHub API 获取最新正式版的 server.jar 下载链接并下载
 # 排除预发布版本（prerelease=false），只取第一个匹配的 server.jar 资产
 RUN curl -sSL https://api.github.com/repos/Anuken/Mindustry/releases/latest \
-    | jq -r '.assets[] | select(.name == "server.jar") | .browser_download_url' \
+    | jq -r '.assets[] | select(.name == "Mindustry.jar") | .browser_download_url' \
     | xargs curl -sSL -o server.jar
 
 # 验证文件是否下载成功
