@@ -1,0 +1,77 @@
+name: 每日构建并推送 Mindustry 服务器镜像
+
+# 触发条件：
+# 1. 每天 UTC 时间 0:00 自动运行（北京时间 8:00）
+# 2. 支持手动触发（可在 GitHub 仓库 Actions 页面点击运行）
+# 3. 可选：当 Dockerfile 变更时自动触发
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - Dockerfile
+
+# 权限配置
+permissions:
+  contents: read
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    # 允许构建失败重试 1 次
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 QEMU（用于多架构构建）
+        uses: docker/setup-qemu-action@v3
+
+      - name: 设置 Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 登录 Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: 获取 Mindustry 最新版本号
+        id: get-version
+        run: |
+          # 调用 GitHub API 获取最新正式版标签（排除预发布）
+          MINDUSTRY_VERSION=$(curl -sSL https://api.github.com/repos/Anuken/Mindustry/releases/latest | jq -r '.tag_name')
+          echo "MINDUSTRY_VERSION=$MINDUSTRY_VERSION" >> $GITHUB_ENV
+          echo "最新版本: $MINDUSTRY_VERSION"
+
+      - name: 构建并推送镜像
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          push: true
+          # 镜像标签：latest + 具体版本号（如 v146）
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/mindustry-server:latest
+            ${{ secrets.DOCKER_HUB_USERNAME }}/mindustry-server:${{ env.MINDUSTRY_VERSION }}
+          # 启用缓存加速构建
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # 添加构建元数据
+          labels: |
+            org.opencontainers.image.title=Mindustry Server
+            org.opencontainers.image.description=每日自动更新的 Mindustry 游戏服务器镜像
+            org.opencontainers.image.version=${{ env.MINDUSTRY_VERSION }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+
+      - name: 清理构建缓存
+        if: always()
+        run: docker builder prune -f
