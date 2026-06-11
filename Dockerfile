@@ -40,5 +40,5 @@ USER mindustry
 # 设置入口点，使用 tini 启动 Java 进程
 ENTRYPOINT ["/sbin/tini", "--", "java", "-jar", "server.jar"]
 
-# 默认启动参数（可通过 docker-compose 覆盖）
-CMD ["headless"]
+# 默认启动参数
+CMD []
