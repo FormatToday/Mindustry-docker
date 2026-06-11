@@ -17,7 +17,7 @@ RUN curl -sSL https://api.github.com/repos/Anuken/Mindustry/releases/latest \
 RUN if [ ! -f server.jar ]; then echo "下载失败！请检查网络连接或 GitHub API 访问权限"; exit 1; fi
 
 # 第二阶段：运行服务端（使用官方 OpenJDK 17 镜像，Mindustry 要求 Java 17+）
-FROM eclipse-temurin:17-jre-alpine
+FROM amazoncorretto:17-alpine
 
 # 安装必要工具（tini 用于正确处理信号，避免僵尸进程）
 RUN apk add --no-cache tini
