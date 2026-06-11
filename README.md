@@ -1,6 +1,6 @@
-[compose file](./docker-compose.yml)
+version: v158.1
 
-version: (v158.1)
+[compose file](./docker-compose.yml)
 
 [game server](https://github.com/Anuken/Mindustry/releases/download//server-release.jar)
 
