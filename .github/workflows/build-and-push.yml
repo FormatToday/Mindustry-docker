@@ -85,7 +85,7 @@ jobs:
               sed -i "s|\[game server\](.*)|\[game server\](${SERVER_DOWNLOAD_URL})|g" README.md
               sed -i "s|\[game client\](.*)|\[game client\](${CLIENT_DOWNLOAD_URL})|g" README.md
               # 如果替换失败（没有找到匹配行），则追加到文件末尾
-              f ! grep -q "\[game server\]" README.md; then
+              if ! grep -q "\[game server\]" README.md; then
                   echo "" >> README.md
                   echo "[game server](${SERVER_DOWNLOAD_URL})" >> README.md
               fi
