@@ -45,7 +45,11 @@ jobs:
           # 调用 GitHub API 获取最新正式版标签（排除预发布）
           MINDUSTRY_VERSION=$(curl -sSL https://api.github.com/repos/Anuken/Mindustry/releases/latest | jq -r '.tag_name')
           echo "MINDUSTRY_VERSION=$MINDUSTRY_VERSION" >> $GITHUB_ENV
+          echo "SERVER_DOWNLOAD_URL=https://github.com/Anuken/Mindustry/releases/download/${VERSION}/server-release.jar" >> $GITHUB_ENV; \
+          echo "CLIENT_DOWNLOAD_URL=https://github.com/Anuken/Mindustry/releases/download/${VERSION}/Mindustry.jar" >> $GITHUB_ENV; \
           echo "最新版本: $MINDUSTRY_VERSION"
+          echo "服务端链接: $SERVER_DOWNLOAD_URL"; \
+          echo "客户端链接: $CLIENT_DOWNLOAD_URL"; \
 
       - name: 构建并推送镜像
         uses: docker/build-push-action@v7
@@ -67,6 +71,44 @@ jobs:
             org.opencontainers.image.description=每日自动更新的 Mindustry 游戏服务器镜像
             org.opencontainers.image.version=${{ env.MINDUSTRY_VERSION }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
+
+      - name: 自动更新 README.md 客户端链接
+        run: |
+          # 检查 README.md 是否存在
+          if [ ! -f README.md ]; then
+              echo "README.md 不存在，创建默认模板"
+              echo "[compose file](./docker-compose.yml)" > README.md
+              echo "[game server](${SERVER_DOWNLOAD_URL})" >> README.md
+              echo "[game client](${CLIENT_DOWNLOAD_URL})" >> README.md
+          else
+              # 使用 sed 替换已有的链接（精确匹配格式）
+              sed -i "s|\[game server\](.*)|\[game server\](${SERVER_DOWNLOAD_URL})|g" README.md
+              sed -i "s|\[game client\](.*)|\[game client\](${CLIENT_DOWNLOAD_URL})|g" README.md
+              # 如果替换失败（没有找到匹配行），则追加到文件末尾
+              f ! grep -q "\[game server\]" README.md; then
+                  echo "" >> README.md
+                  echo "[game server](${SERVER_DOWNLOAD_URL})" >> README.md
+              fi
+              if ! grep -q "\[game client\]" README.md; then
+                  echo "" >> README.md
+                  echo "[game client](${CLIENT_DOWNLOAD_URL})" >> README.md
+              fi
+          fi
+
+          # 配置 Git 提交信息（使用 GitHub Actions 机器人身份）
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # 检查是否有变化，避免空提交
+          if git diff --quiet README.md; then
+              echo "README.md 无变化，无需提交"
+              exit 0
+          fi
+
+          # 提交并推送修改
+          git add README.md
+          git commit -m "自动更新服务端、客户端链接至版本 ${MINDUSTRY_VERSION}"
+          git push origin main
 
       - name: 清理构建缓存
         if: always()
