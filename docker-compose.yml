@@ -10,5 +10,5 @@ services:
       - ./data:/app/config
     environment:
       - JAVA_OPTS=-Xmx2G -Xms512M
-    entrypoint: ["/sbin/tini", "--", "sh", "-c", "java $JAVA_OPTS -jar server.jar headless"]
+    entrypoint: ["/sbin/tini", "--", "sh", "-c", "java $JAVA_OPTS -jar server.jar"]
     stop_grace_period: 30s
