@@ -41,4 +41,4 @@ USER mindustry
 ENTRYPOINT ["/sbin/tini", "--", "java", "-jar", "server.jar"]
 
 # 默认启动参数
-CMD []
+CMD ["host"]
