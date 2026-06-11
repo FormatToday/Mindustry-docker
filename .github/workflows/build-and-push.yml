@@ -75,3 +75,14 @@ jobs:
       - name: 清理构建缓存
         if: always()
         run: docker builder prune -f
+  # 清除旧的workflow运行记录
+  cleanup-workflow-runs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 删除旧 Actions
+        uses: Mattraks/delete-workflow-runs@main
+        with:
+          token: ${{ secrets.CLEANUP_TOKEN }}
+          repository: ${{ github.repository }}
+          retain_days: 0
+          keep_minimum_runs: 2
