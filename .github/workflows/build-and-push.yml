@@ -26,6 +26,10 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+          token: ${{ secrets.GH_TOKEN }}
+          persist-credentials: true
 
       - name: 设置 QEMU（用于多架构构建）
         uses: docker/setup-qemu-action@v4
@@ -127,7 +131,7 @@ jobs:
       - name: 删除旧 Actions
         uses: Mattraks/delete-workflow-runs@main
         with:
-          token: ${{ secrets.CLEANUP_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
           repository: ${{ github.repository }}
           retain_days: 0
           keep_minimum_runs: 2
